@@ -1,0 +1,1218 @@
+{
+  "manifest_version": 1,
+  "type": "device",
+  "name": "BorgBase",
+  "description": {
+    "en": "Watch your BorgBase backups: overdue backups, quotas and usage in scenes and dashboards.",
+    "fr": "Surveillez vos sauvegardes BorgBase : retards, quotas et espace dans vos scènes et tableaux de bord.",
+    "de": "BorgBase-Sicherungen im Blick: Verzug, Kontingente und Belegung in Szenen und Dashboards.",
+    "es": "Vigile sus copias BorgBase: retrasos, cuotas y espacio en sus escenas y paneles."
+  },
+  "version": "0.1.0",
+  "docker_image": "ghcr.io/william-de71/gladys-borgbase:0.1.0",
+  "gladys_version": ">=5.3.0",
+  "categories": ["servers", "security"],
+  "keywords": [
+    "borg",
+    "borgbackup",
+    "borgmatic",
+    "vorta",
+    "restic",
+    "backup",
+    "sauvegarde",
+    "Datensicherung",
+    "copia de seguridad",
+    "offsite"
+  ],
+  "cover_image": "https://raw.githubusercontent.com/William-De71/gladys-borgbase/main/cover.jpg",
+  "transports": ["cloud"],
+  "config_schema": [
+    {
+      "key": "intro",
+      "type": "section",
+      "label": {
+        "en": "BorgBase access",
+        "fr": "Accès à BorgBase",
+        "de": "Zugriff auf BorgBase",
+        "es": "Acceso a BorgBase"
+      },
+      "description": {
+        "en": "The integration reads your repositories with an API token. On borgbase.com, open Account, then the API tab, and create a token with the Read Only permission (enough: the integration never changes anything). You can give it an expiry date. Copy the token below.",
+        "fr": "L’intégration lit vos dépôts avec un jeton d’API. Sur borgbase.com, ouvrez Account, puis l’onglet API, et créez un jeton avec la permission Read Only (suffisante : l’intégration ne modifie rien). Vous pouvez lui donner une date d’expiration. Copiez le jeton ci-dessous.",
+        "de": "Die Integration liest deine Repositories mit einem API-Token. Öffne auf borgbase.com Account, dann den Reiter API, und erstelle ein Token mit der Berechtigung Read Only (das reicht: die Integration ändert nichts). Du kannst ein Ablaufdatum angeben. Kopiere das Token hierher.",
+        "es": "La integración lee sus repositorios con un token de API. En borgbase.com, abra Account y luego la pestaña API, y cree un token con el permiso Read Only (suficiente: la integración no modifica nada). Puede darle una fecha de caducidad. Copie el token aquí."
+      },
+      "links": [
+        {
+          "url": "https://www.borgbase.com/account?tab=api",
+          "label": {
+            "en": "Create an API token",
+            "fr": "Créer un jeton d’API",
+            "de": "Ein API-Token erstellen",
+            "es": "Crear un token de API"
+          }
+        },
+        {
+          "url": "https://docs.borgbase.com/api/",
+          "label": {
+            "en": "BorgBase API documentation",
+            "fr": "Documentation de l’API BorgBase",
+            "de": "Dokumentation der BorgBase-API",
+            "es": "Documentación de la API de BorgBase"
+          }
+        }
+      ]
+    },
+    {
+      "key": "token",
+      "type": "secret",
+      "label": {
+        "en": "API token",
+        "fr": "Jeton d’API",
+        "de": "API-Token",
+        "es": "Token de API"
+      },
+      "description": {
+        "en": "A Read Only token is enough. BorgBase refuses it after its expiry date.",
+        "fr": "Un jeton Read Only suffit. BorgBase le refuse après sa date d’expiration.",
+        "de": "Ein Read-Only-Token reicht. Nach dem Ablaufdatum lehnt BorgBase es ab.",
+        "es": "Basta con un token Read Only. BorgBase lo rechaza después de su fecha de caducidad."
+      },
+      "required": true
+    },
+    {
+      "key": "monitoring",
+      "type": "section",
+      "label": {
+        "en": "Overdue backups",
+        "fr": "Sauvegardes en retard",
+        "de": "Überfällige Sicherungen",
+        "es": "Copias atrasadas"
+      },
+      "description": {
+        "en": "A repository is overdue when it received no new backup for too long. When its BorgBase monitoring is on (Edit repository, Monitoring: X days), those X days are used; otherwise the delay below.",
+        "fr": "Un dépôt est en retard quand il n’a reçu aucune nouvelle sauvegarde depuis trop longtemps. Si sa surveillance BorgBase est active (Edit repository, Monitoring : X jours), ces X jours s’appliquent ; sinon, le délai ci-dessous.",
+        "de": "Ein Repository ist überfällig, wenn es zu lange keine neue Sicherung erhalten hat. Ist seine BorgBase-Überwachung aktiv (Edit repository, Monitoring: X Tage), gelten diese X Tage, sonst die Frist unten.",
+        "es": "Un repositorio está atrasado cuando lleva demasiado tiempo sin recibir una copia nueva. Si su supervisión de BorgBase está activa (Edit repository, Monitoring: X días), se usan esos X días; si no, el plazo de abajo."
+      }
+    },
+    {
+      "key": "stale_hours",
+      "type": "number",
+      "label": {
+        "en": "Overdue after (hours)",
+        "fr": "En retard après (heures)",
+        "de": "Überfällig nach (Stunden)",
+        "es": "Atrasada después de (horas)"
+      },
+      "description": {
+        "en": "For repositories without BorgBase monitoring. 26 suits a daily backup.",
+        "fr": "Pour les dépôts sans surveillance BorgBase. 26 convient à une sauvegarde quotidienne.",
+        "de": "Für Repositories ohne BorgBase-Überwachung. 26 passt zu einer täglichen Sicherung.",
+        "es": "Para los repositorios sin supervisión de BorgBase. 26 conviene a una copia diaria."
+      },
+      "min": 1,
+      "max": 2160,
+      "default": 26,
+      "required": false
+    },
+    {
+      "key": "poll_interval",
+      "type": "number",
+      "label": {
+        "en": "Refresh interval (s)",
+        "fr": "Intervalle de lecture (s)",
+        "de": "Abfrageintervall (s)",
+        "es": "Intervalo de lectura (s)"
+      },
+      "description": {
+        "en": "How often BorgBase is read, between 300 and 3600 seconds. It is also the delay of the scene triggers.",
+        "fr": "Fréquence de lecture de BorgBase, entre 300 et 3600 secondes. C’est aussi le délai de réaction des déclencheurs de scène.",
+        "de": "Wie oft BorgBase gelesen wird, zwischen 300 und 3600 Sekunden. Das ist auch die Reaktionszeit der Szenenauslöser.",
+        "es": "Cada cuánto se lee BorgBase, entre 300 y 3600 segundos. Es también el retardo de los disparadores de escena."
+      },
+      "min": 300,
+      "max": 3600,
+      "default": 900,
+      "required": false
+    },
+    {
+      "key": "language",
+      "type": "select",
+      "label": {
+        "en": "Language of the texts",
+        "fr": "Langue des textes",
+        "de": "Sprache der Texte",
+        "es": "Idioma de los textos"
+      },
+      "description": {
+        "en": "Device names, scene summaries and outputs. Automatic: the language of your dashboard, once a BorgBase widget has been displayed.",
+        "fr": "Noms des appareils, résumés et sorties des scènes. Automatique : la langue de votre tableau de bord, dès qu’un widget BorgBase a été affiché.",
+        "de": "Gerätenamen, Zusammenfassungen und Ausgaben der Szenen. Automatisch: die Sprache deines Dashboards, sobald ein BorgBase-Widget angezeigt wurde.",
+        "es": "Nombres de los dispositivos, resúmenes y salidas de las escenas. Automático: el idioma de su panel, en cuanto se haya mostrado un widget de BorgBase."
+      },
+      "options": [
+        {
+          "value": "auto",
+          "label": {
+            "en": "Automatic",
+            "fr": "Automatique",
+            "de": "Automatisch",
+            "es": "Automático"
+          }
+        },
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "English",
+            "de": "English",
+            "es": "English"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "Français",
+            "fr": "Français",
+            "de": "Français",
+            "es": "Français"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "Deutsch",
+            "fr": "Deutsch",
+            "de": "Deutsch",
+            "es": "Deutsch"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Español",
+            "fr": "Español",
+            "de": "Español",
+            "es": "Español"
+          }
+        }
+      ],
+      "default": "auto",
+      "required": false
+    }
+  ],
+  "actions": [
+    {
+      "key": "test_connection",
+      "label": {
+        "en": "Test the connection",
+        "fr": "Tester la connexion",
+        "de": "Verbindung testen",
+        "es": "Probar la conexión"
+      },
+      "description": {
+        "en": "Checks the token and reads every repository.",
+        "fr": "Vérifie le jeton et lit chaque dépôt.",
+        "de": "Prüft das Token und liest jedes Repository.",
+        "es": "Comprueba el token y lee cada repositorio."
+      },
+      "timeout_seconds": 60
+    }
+  ],
+  "widgets": [
+    {
+      "key": "overview",
+      "label": {
+        "en": "BorgBase",
+        "fr": "BorgBase",
+        "de": "BorgBase",
+        "es": "BorgBase"
+      },
+      "description": {
+        "en": "Storage used, repositories, overdue backups and what needs attention.",
+        "fr": "Stockage utilisé, dépôts, sauvegardes en retard et points à surveiller.",
+        "de": "Belegter Speicher, Repositories, überfällige Sicherungen, offene Punkte.",
+        "es": "Almacenamiento usado, repositorios, copias atrasadas y puntos a vigilar."
+      },
+      "icon": "shield"
+    },
+    {
+      "key": "repositories",
+      "label": {
+        "en": "Backup repositories",
+        "fr": "Dépôts de sauvegarde",
+        "de": "Sicherungs-Repositories",
+        "es": "Repositorios de copias"
+      },
+      "description": {
+        "en": "Each repository with its size, last backup and status.",
+        "fr": "Chaque dépôt avec sa taille, sa dernière sauvegarde et son état.",
+        "de": "Jedes Repository mit Größe, letzter Sicherung und Status.",
+        "es": "Cada repositorio con su tamaño, su última copia y su estado."
+      },
+      "icon": "database",
+      "settings": [
+        {
+          "key": "order",
+          "type": "select",
+          "label": {
+            "en": "Order",
+            "fr": "Ordre",
+            "de": "Reihenfolge",
+            "es": "Orden"
+          },
+          "options": [
+            {
+              "value": "attention",
+              "label": {
+                "en": "Needs attention first",
+                "fr": "À surveiller d’abord",
+                "de": "Offene Punkte zuerst",
+                "es": "Primero lo que requiere atención"
+              }
+            },
+            {
+              "value": "name",
+              "label": {
+                "en": "Name",
+                "fr": "Nom",
+                "de": "Name",
+                "es": "Nombre"
+              }
+            },
+            {
+              "value": "usage",
+              "label": {
+                "en": "Largest first",
+                "fr": "Les plus gros d’abord",
+                "de": "Größte zuerst",
+                "es": "Los más grandes primero"
+              }
+            }
+          ],
+          "default": "attention",
+          "required": false
+        },
+        {
+          "key": "count",
+          "type": "number",
+          "label": {
+            "en": "Entries shown",
+            "fr": "Entrées affichées",
+            "de": "Angezeigte Einträge",
+            "es": "Entradas mostradas"
+          },
+          "min": 1,
+          "max": 12,
+          "default": 8,
+          "required": false
+        }
+      ]
+    },
+    {
+      "key": "usage",
+      "label": {
+        "en": "BorgBase usage",
+        "fr": "Espace BorgBase",
+        "de": "BorgBase-Belegung",
+        "es": "Espacio BorgBase"
+      },
+      "description": {
+        "en": "The size history of a repository, or of the whole account.",
+        "fr": "L’historique de la taille d’un dépôt, ou de tout le compte.",
+        "de": "Der Größenverlauf eines Repositorys oder des ganzen Kontos.",
+        "es": "El historial del tamaño de un repositorio, o de toda la cuenta."
+      },
+      "icon": "trending-up",
+      "settings": [
+        {
+          "key": "repository",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Repository",
+            "fr": "Dépôt",
+            "de": "Repository",
+            "es": "Repositorio"
+          },
+          "description": {
+            "en": "Leave empty for the whole account.",
+            "fr": "Laissez vide pour tout le compte.",
+            "de": "Leer lassen für das ganze Konto.",
+            "es": "Déjelo vacío para toda la cuenta."
+          },
+          "required": false
+        },
+        {
+          "key": "interval",
+          "type": "select",
+          "label": {
+            "en": "Period",
+            "fr": "Période",
+            "de": "Zeitraum",
+            "es": "Periodo"
+          },
+          "options": [
+            {
+              "value": "last-week",
+              "label": {
+                "en": "Last week",
+                "fr": "Semaine dernière",
+                "de": "Letzte Woche",
+                "es": "Última semana"
+              }
+            },
+            {
+              "value": "last-month",
+              "label": {
+                "en": "Last month",
+                "fr": "Mois dernier",
+                "de": "Letzter Monat",
+                "es": "Último mes"
+              }
+            },
+            {
+              "value": "last-three-months",
+              "label": {
+                "en": "Last three months",
+                "fr": "Trois derniers mois",
+                "de": "Letzte drei Monate",
+                "es": "Últimos tres meses"
+              }
+            },
+            {
+              "value": "last-year",
+              "label": {
+                "en": "Last year",
+                "fr": "Année dernière",
+                "de": "Letztes Jahr",
+                "es": "Último año"
+              }
+            }
+          ],
+          "default": "last-month",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "scene_triggers": [
+    {
+      "key": "backup_received",
+      "label": {
+        "en": "BorgBase: new backup",
+        "fr": "BorgBase : nouvelle sauvegarde",
+        "de": "BorgBase: neue Sicherung",
+        "es": "BorgBase: nueva copia"
+      },
+      "description": {
+        "en": "A repository was written to: a new backup (or a prune).",
+        "fr": "Un dépôt a été modifié : une nouvelle sauvegarde (ou un nettoyage).",
+        "de": "Ein Repository wurde beschrieben: eine neue Sicherung (oder ein Prune).",
+        "es": "Se escribió en un repositorio: una copia nueva (o una purga)."
+      },
+      "fields": [
+        {
+          "key": "repository",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Repository",
+            "fr": "Dépôt",
+            "de": "Repository",
+            "es": "Repositorio"
+          },
+          "description": {
+            "en": "One of the BorgBase devices. Leave empty for any.",
+            "fr": "Un des appareils BorgBase. Laissez vide pour tous.",
+            "de": "Eines der BorgBase-Geräte. Leer lassen für alle.",
+            "es": "Uno de los dispositivos BorgBase. Déjelo vacío para cualquiera."
+          },
+          "required": false
+        }
+      ],
+      "variables": [
+        {
+          "key": "repository",
+          "type": "string",
+          "label": {
+            "en": "Device",
+            "fr": "Appareil",
+            "de": "Gerät",
+            "es": "Dispositivo"
+          },
+          "description": {
+            "en": "External id of the repository (or account) device",
+            "fr": "Identifiant externe de l’appareil du dépôt (ou du compte)",
+            "de": "Externe ID des Repository- (oder Konto-)Geräts",
+            "es": "Identificador externo del dispositivo del repositorio (o de la cuenta)"
+          }
+        },
+        {
+          "key": "repository_name",
+          "type": "string",
+          "label": {
+            "en": "Repository name",
+            "fr": "Nom du dépôt",
+            "de": "Repository-Name",
+            "es": "Nombre del repositorio"
+          }
+        },
+        {
+          "key": "usage_gb",
+          "type": "number",
+          "label": {
+            "en": "Size (GB)",
+            "fr": "Taille (Go)",
+            "de": "Größe (GB)",
+            "es": "Tamaño (GB)"
+          }
+        },
+        {
+          "key": "summary",
+          "type": "string",
+          "label": {
+            "en": "Summary",
+            "fr": "Résumé",
+            "de": "Zusammenfassung",
+            "es": "Resumen"
+          },
+          "description": {
+            "en": "A sentence ready for a message",
+            "fr": "Une phrase prête pour un message",
+            "de": "Ein Satz für eine Nachricht",
+            "es": "Una frase lista para un mensaje"
+          }
+        },
+        {
+          "key": "last_backup",
+          "type": "string",
+          "label": {
+            "en": "Last backup (ISO 8601)",
+            "fr": "Dernière sauvegarde (ISO 8601)",
+            "de": "Letzte Sicherung (ISO 8601)",
+            "es": "Última copia (ISO 8601)"
+          }
+        }
+      ]
+    },
+    {
+      "key": "backup_overdue",
+      "label": {
+        "en": "BorgBase: backup overdue",
+        "fr": "BorgBase : sauvegarde en retard",
+        "de": "BorgBase: Sicherung überfällig",
+        "es": "BorgBase: copia atrasada"
+      },
+      "description": {
+        "en": "A repository received no new backup within its delay.",
+        "fr": "Un dépôt n’a reçu aucune nouvelle sauvegarde dans son délai.",
+        "de": "Ein Repository hat in seiner Frist keine neue Sicherung erhalten.",
+        "es": "Un repositorio no ha recibido ninguna copia nueva en su plazo."
+      },
+      "fields": [
+        {
+          "key": "repository",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Repository",
+            "fr": "Dépôt",
+            "de": "Repository",
+            "es": "Repositorio"
+          },
+          "description": {
+            "en": "One of the BorgBase devices. Leave empty for any.",
+            "fr": "Un des appareils BorgBase. Laissez vide pour tous.",
+            "de": "Eines der BorgBase-Geräte. Leer lassen für alle.",
+            "es": "Uno de los dispositivos BorgBase. Déjelo vacío para cualquiera."
+          },
+          "required": false
+        }
+      ],
+      "variables": [
+        {
+          "key": "repository",
+          "type": "string",
+          "label": {
+            "en": "Device",
+            "fr": "Appareil",
+            "de": "Gerät",
+            "es": "Dispositivo"
+          },
+          "description": {
+            "en": "External id of the repository (or account) device",
+            "fr": "Identifiant externe de l’appareil du dépôt (ou du compte)",
+            "de": "Externe ID des Repository- (oder Konto-)Geräts",
+            "es": "Identificador externo del dispositivo del repositorio (o de la cuenta)"
+          }
+        },
+        {
+          "key": "repository_name",
+          "type": "string",
+          "label": {
+            "en": "Repository name",
+            "fr": "Nom du dépôt",
+            "de": "Repository-Name",
+            "es": "Nombre del repositorio"
+          }
+        },
+        {
+          "key": "usage_gb",
+          "type": "number",
+          "label": {
+            "en": "Size (GB)",
+            "fr": "Taille (Go)",
+            "de": "Größe (GB)",
+            "es": "Tamaño (GB)"
+          }
+        },
+        {
+          "key": "summary",
+          "type": "string",
+          "label": {
+            "en": "Summary",
+            "fr": "Résumé",
+            "de": "Zusammenfassung",
+            "es": "Resumen"
+          },
+          "description": {
+            "en": "A sentence ready for a message",
+            "fr": "Une phrase prête pour un message",
+            "de": "Ein Satz für eine Nachricht",
+            "es": "Una frase lista para un mensaje"
+          }
+        },
+        {
+          "key": "last_backup",
+          "type": "string",
+          "label": {
+            "en": "Last backup (ISO 8601)",
+            "fr": "Dernière sauvegarde (ISO 8601)",
+            "de": "Letzte Sicherung (ISO 8601)",
+            "es": "Última copia (ISO 8601)"
+          }
+        },
+        {
+          "key": "hours_since_backup",
+          "type": "number",
+          "label": {
+            "en": "Hours since the last backup",
+            "fr": "Heures depuis la dernière sauvegarde",
+            "de": "Stunden seit der letzten Sicherung",
+            "es": "Horas desde la última copia"
+          },
+          "description": {
+            "en": "-1 when never backed up",
+            "fr": "-1 si jamais sauvegardé",
+            "de": "-1 wenn nie gesichert",
+            "es": "-1 si nunca se ha copiado"
+          }
+        },
+        {
+          "key": "threshold_hours",
+          "type": "number",
+          "label": {
+            "en": "Delay (hours)",
+            "fr": "Délai (heures)",
+            "de": "Frist (Stunden)",
+            "es": "Plazo (horas)"
+          }
+        }
+      ]
+    },
+    {
+      "key": "backup_resumed",
+      "label": {
+        "en": "BorgBase: backups resumed",
+        "fr": "BorgBase : sauvegardes reprises",
+        "de": "BorgBase: Sicherungen wieder da",
+        "es": "BorgBase: copias reanudadas"
+      },
+      "description": {
+        "en": "An overdue repository received a backup again.",
+        "fr": "Un dépôt en retard a de nouveau reçu une sauvegarde.",
+        "de": "Ein überfälliges Repository hat wieder eine Sicherung erhalten.",
+        "es": "Un repositorio atrasado ha vuelto a recibir una copia."
+      },
+      "fields": [
+        {
+          "key": "repository",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Repository",
+            "fr": "Dépôt",
+            "de": "Repository",
+            "es": "Repositorio"
+          },
+          "description": {
+            "en": "One of the BorgBase devices. Leave empty for any.",
+            "fr": "Un des appareils BorgBase. Laissez vide pour tous.",
+            "de": "Eines der BorgBase-Geräte. Leer lassen für alle.",
+            "es": "Uno de los dispositivos BorgBase. Déjelo vacío para cualquiera."
+          },
+          "required": false
+        }
+      ],
+      "variables": [
+        {
+          "key": "repository",
+          "type": "string",
+          "label": {
+            "en": "Device",
+            "fr": "Appareil",
+            "de": "Gerät",
+            "es": "Dispositivo"
+          },
+          "description": {
+            "en": "External id of the repository (or account) device",
+            "fr": "Identifiant externe de l’appareil du dépôt (ou du compte)",
+            "de": "Externe ID des Repository- (oder Konto-)Geräts",
+            "es": "Identificador externo del dispositivo del repositorio (o de la cuenta)"
+          }
+        },
+        {
+          "key": "repository_name",
+          "type": "string",
+          "label": {
+            "en": "Repository name",
+            "fr": "Nom du dépôt",
+            "de": "Repository-Name",
+            "es": "Nombre del repositorio"
+          }
+        },
+        {
+          "key": "usage_gb",
+          "type": "number",
+          "label": {
+            "en": "Size (GB)",
+            "fr": "Taille (Go)",
+            "de": "Größe (GB)",
+            "es": "Tamaño (GB)"
+          }
+        },
+        {
+          "key": "summary",
+          "type": "string",
+          "label": {
+            "en": "Summary",
+            "fr": "Résumé",
+            "de": "Zusammenfassung",
+            "es": "Resumen"
+          },
+          "description": {
+            "en": "A sentence ready for a message",
+            "fr": "Une phrase prête pour un message",
+            "de": "Ein Satz für eine Nachricht",
+            "es": "Una frase lista para un mensaje"
+          }
+        },
+        {
+          "key": "last_backup",
+          "type": "string",
+          "label": {
+            "en": "Last backup (ISO 8601)",
+            "fr": "Dernière sauvegarde (ISO 8601)",
+            "de": "Letzte Sicherung (ISO 8601)",
+            "es": "Última copia (ISO 8601)"
+          }
+        }
+      ]
+    },
+    {
+      "key": "quota_level_reached",
+      "label": {
+        "en": "BorgBase: quota level reached",
+        "fr": "BorgBase : seuil de quota atteint",
+        "de": "BorgBase: Kontingentstufe erreicht",
+        "es": "BorgBase: nivel de cuota alcanzado"
+      },
+      "description": {
+        "en": "A repository (of its quota) or the account (of its storage limit) reaches 80, 90 or 100 %.",
+        "fr": "Un dépôt (de son quota) ou le compte (de sa limite de stockage) atteint 80, 90 ou 100 %.",
+        "de": "Ein Repository (seines Kontingents) oder das Konto (seines Speicherlimits) erreicht 80, 90 oder 100 %.",
+        "es": "Un repositorio (de su cuota) o la cuenta (de su límite de almacenamiento) alcanza el 80, 90 o 100 %."
+      },
+      "fields": [
+        {
+          "key": "repository",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Repository",
+            "fr": "Dépôt",
+            "de": "Repository",
+            "es": "Repositorio"
+          },
+          "description": {
+            "en": "A repository device, or the account device. Leave empty for any.",
+            "fr": "Un appareil de dépôt, ou l’appareil du compte. Laissez vide pour tous.",
+            "de": "Ein Repository-Gerät oder das Kontogerät. Leer lassen für alle.",
+            "es": "Un dispositivo de repositorio, o el de la cuenta. Déjelo vacío para cualquiera."
+          },
+          "required": false
+        },
+        {
+          "key": "level",
+          "type": "select",
+          "label": {
+            "en": "Level",
+            "fr": "Seuil",
+            "de": "Stufe",
+            "es": "Nivel"
+          },
+          "description": {
+            "en": "Leave empty for any.",
+            "fr": "Laissez vide pour tous.",
+            "de": "Leer lassen für jede.",
+            "es": "Déjelo vacío para cualquiera."
+          },
+          "options": [
+            {
+              "value": "80",
+              "label": {
+                "en": "80 %",
+                "fr": "80 %",
+                "de": "80 %",
+                "es": "80 %"
+              }
+            },
+            {
+              "value": "90",
+              "label": {
+                "en": "90 %",
+                "fr": "90 %",
+                "de": "90 %",
+                "es": "90 %"
+              }
+            },
+            {
+              "value": "100",
+              "label": {
+                "en": "100 %",
+                "fr": "100 %",
+                "de": "100 %",
+                "es": "100 %"
+              }
+            }
+          ],
+          "required": false
+        },
+        {
+          "key": "scope",
+          "type": "select",
+          "label": {
+            "en": "Scope",
+            "fr": "Portée",
+            "de": "Bereich",
+            "es": "Ámbito"
+          },
+          "description": {
+            "en": "Leave empty for both.",
+            "fr": "Laissez vide pour les deux.",
+            "de": "Leer lassen für beide.",
+            "es": "Déjelo vacío para ambos."
+          },
+          "options": [
+            {
+              "value": "repository",
+              "label": {
+                "en": "A repository quota",
+                "fr": "Quota d’un dépôt",
+                "de": "Kontingent eines Repositorys",
+                "es": "Cuota de un repositorio"
+              }
+            },
+            {
+              "value": "account",
+              "label": {
+                "en": "Account storage limit",
+                "fr": "Limite de stockage du compte",
+                "de": "Speicherlimit des Kontos",
+                "es": "Límite de almacenamiento de la cuenta"
+              }
+            }
+          ],
+          "required": false
+        }
+      ],
+      "variables": [
+        {
+          "key": "repository",
+          "type": "string",
+          "label": {
+            "en": "Device",
+            "fr": "Appareil",
+            "de": "Gerät",
+            "es": "Dispositivo"
+          },
+          "description": {
+            "en": "External id of the repository (or account) device",
+            "fr": "Identifiant externe de l’appareil du dépôt (ou du compte)",
+            "de": "Externe ID des Repository- (oder Konto-)Geräts",
+            "es": "Identificador externo del dispositivo del repositorio (o de la cuenta)"
+          }
+        },
+        {
+          "key": "repository_name",
+          "type": "string",
+          "label": {
+            "en": "Repository name",
+            "fr": "Nom du dépôt",
+            "de": "Repository-Name",
+            "es": "Nombre del repositorio"
+          }
+        },
+        {
+          "key": "usage_gb",
+          "type": "number",
+          "label": {
+            "en": "Size (GB)",
+            "fr": "Taille (Go)",
+            "de": "Größe (GB)",
+            "es": "Tamaño (GB)"
+          }
+        },
+        {
+          "key": "summary",
+          "type": "string",
+          "label": {
+            "en": "Summary",
+            "fr": "Résumé",
+            "de": "Zusammenfassung",
+            "es": "Resumen"
+          },
+          "description": {
+            "en": "A sentence ready for a message",
+            "fr": "Une phrase prête pour un message",
+            "de": "Ein Satz für eine Nachricht",
+            "es": "Una frase lista para un mensaje"
+          }
+        },
+        {
+          "key": "level",
+          "type": "string",
+          "label": {
+            "en": "Level reached (%)",
+            "fr": "Seuil atteint (%)",
+            "de": "Erreichte Stufe (%)",
+            "es": "Nivel alcanzado (%)"
+          }
+        },
+        {
+          "key": "used_percent",
+          "type": "number",
+          "label": {
+            "en": "Used (%)",
+            "fr": "Utilisé (%)",
+            "de": "Belegt (%)",
+            "es": "Usado (%)"
+          }
+        },
+        {
+          "key": "quota_gb",
+          "type": "number",
+          "label": {
+            "en": "Quota or limit (GB)",
+            "fr": "Quota ou limite (Go)",
+            "de": "Kontingent oder Limit (GB)",
+            "es": "Cuota o límite (GB)"
+          }
+        },
+        {
+          "key": "scope",
+          "type": "string",
+          "label": {
+            "en": "Scope",
+            "fr": "Portée",
+            "de": "Bereich",
+            "es": "Ámbito"
+          },
+          "description": {
+            "en": "repository or account",
+            "fr": "repository ou account",
+            "de": "repository oder account",
+            "es": "repository o account"
+          }
+        }
+      ]
+    }
+  ],
+  "scene_actions": [
+    {
+      "key": "get_repository",
+      "label": {
+        "en": "BorgBase: read a repository",
+        "fr": "BorgBase : lire un dépôt",
+        "de": "BorgBase: Repository lesen",
+        "es": "BorgBase: leer un repositorio"
+      },
+      "description": {
+        "en": "The size, quota and last backup of a repository, for a message or a condition.",
+        "fr": "La taille, le quota et la dernière sauvegarde d’un dépôt, pour un message ou une condition.",
+        "de": "Größe, Kontingent und letzte Sicherung eines Repositorys, für eine Nachricht oder Bedingung.",
+        "es": "El tamaño, la cuota y la última copia de un repositorio, para un mensaje o una condición."
+      },
+      "timeout_seconds": 45,
+      "fields": [
+        {
+          "key": "repository",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Repository",
+            "fr": "Dépôt",
+            "de": "Repository",
+            "es": "Repositorio"
+          },
+          "description": {
+            "en": "Leave empty for the first repository.",
+            "fr": "Laissez vide pour le premier dépôt.",
+            "de": "Leer lassen für das erste Repository.",
+            "es": "Déjelo vacío para el primer repositorio."
+          },
+          "required": false
+        }
+      ],
+      "outputs": [
+        {
+          "key": "repository_name",
+          "type": "string",
+          "label": {
+            "en": "Repository name",
+            "fr": "Nom du dépôt",
+            "de": "Repository-Name",
+            "es": "Nombre del repositorio"
+          }
+        },
+        {
+          "key": "status",
+          "type": "string",
+          "label": {
+            "en": "Status",
+            "fr": "État",
+            "de": "Status",
+            "es": "Estado"
+          },
+          "description": {
+            "en": "ok, overdue or never",
+            "fr": "ok, overdue ou never",
+            "de": "ok, overdue oder never",
+            "es": "ok, overdue o never"
+          }
+        },
+        {
+          "key": "overdue",
+          "type": "boolean",
+          "label": {
+            "en": "Overdue",
+            "fr": "En retard",
+            "de": "Überfällig",
+            "es": "Atrasada"
+          }
+        },
+        {
+          "key": "usage_gb",
+          "type": "number",
+          "label": {
+            "en": "Size (GB)",
+            "fr": "Taille (Go)",
+            "de": "Größe (GB)",
+            "es": "Tamaño (GB)"
+          }
+        },
+        {
+          "key": "quota_gb",
+          "type": "number",
+          "label": {
+            "en": "Quota (GB)",
+            "fr": "Quota (Go)",
+            "de": "Kontingent (GB)",
+            "es": "Cuota (GB)"
+          },
+          "description": {
+            "en": "-1 without a quota",
+            "fr": "-1 sans quota",
+            "de": "-1 ohne Kontingent",
+            "es": "-1 sin cuota"
+          }
+        },
+        {
+          "key": "used_percent",
+          "type": "number",
+          "label": {
+            "en": "Quota used (%)",
+            "fr": "Quota utilisé (%)",
+            "de": "Kontingent belegt (%)",
+            "es": "Cuota usada (%)"
+          },
+          "description": {
+            "en": "-1 without a quota",
+            "fr": "-1 sans quota",
+            "de": "-1 ohne Kontingent",
+            "es": "-1 sin cuota"
+          }
+        },
+        {
+          "key": "hours_since_backup",
+          "type": "number",
+          "label": {
+            "en": "Hours since the last backup",
+            "fr": "Heures depuis la dernière sauvegarde",
+            "de": "Stunden seit der letzten Sicherung",
+            "es": "Horas desde la última copia"
+          },
+          "description": {
+            "en": "-1 when never backed up",
+            "fr": "-1 si jamais sauvegardé",
+            "de": "-1 wenn nie gesichert",
+            "es": "-1 si nunca se ha copiado"
+          }
+        },
+        {
+          "key": "last_backup",
+          "type": "string",
+          "label": {
+            "en": "Last backup (ISO 8601)",
+            "fr": "Dernière sauvegarde (ISO 8601)",
+            "de": "Letzte Sicherung (ISO 8601)",
+            "es": "Última copia (ISO 8601)"
+          }
+        },
+        {
+          "key": "region",
+          "type": "string",
+          "label": {
+            "en": "Region",
+            "fr": "Région",
+            "de": "Region",
+            "es": "Región"
+          }
+        },
+        {
+          "key": "summary",
+          "type": "string",
+          "label": {
+            "en": "Summary",
+            "fr": "Résumé",
+            "de": "Zusammenfassung",
+            "es": "Resumen"
+          }
+        }
+      ]
+    },
+    {
+      "key": "get_account",
+      "label": {
+        "en": "BorgBase: read the account",
+        "fr": "BorgBase : lire le compte",
+        "de": "BorgBase: Konto lesen",
+        "es": "BorgBase: leer la cuenta"
+      },
+      "description": {
+        "en": "Total usage, storage limit and overdue backups, for a weekly report.",
+        "fr": "Espace total, limite de stockage et sauvegardes en retard, pour un bilan hebdomadaire.",
+        "de": "Gesamtbelegung, Speicherlimit und überfällige Sicherungen, für einen Wochenbericht.",
+        "es": "Espacio total, límite de almacenamiento y copias atrasadas, para un informe semanal."
+      },
+      "timeout_seconds": 45,
+      "fields": [],
+      "outputs": [
+        {
+          "key": "plan",
+          "type": "string",
+          "label": {
+            "en": "Plan",
+            "fr": "Offre",
+            "de": "Tarif",
+            "es": "Plan"
+          }
+        },
+        {
+          "key": "usage_gb",
+          "type": "number",
+          "label": {
+            "en": "Total usage (GB)",
+            "fr": "Espace utilisé (Go)",
+            "de": "Belegt (GB)",
+            "es": "Espacio usado (GB)"
+          }
+        },
+        {
+          "key": "storage_limit_gb",
+          "type": "number",
+          "label": {
+            "en": "Storage limit (GB)",
+            "fr": "Limite de stockage (Go)",
+            "de": "Speicherlimit (GB)",
+            "es": "Límite de almacenamiento (GB)"
+          },
+          "description": {
+            "en": "-1 when unknown",
+            "fr": "-1 si inconnu",
+            "de": "-1 wenn unbekannt",
+            "es": "-1 si se desconoce"
+          }
+        },
+        {
+          "key": "used_percent",
+          "type": "number",
+          "label": {
+            "en": "Storage limit used (%)",
+            "fr": "Limite de stockage utilisée (%)",
+            "de": "Speicherlimit belegt (%)",
+            "es": "Límite usado (%)"
+          },
+          "description": {
+            "en": "-1 when unknown",
+            "fr": "-1 si inconnu",
+            "de": "-1 wenn unbekannt",
+            "es": "-1 si se desconoce"
+          }
+        },
+        {
+          "key": "repositories",
+          "type": "number",
+          "label": {
+            "en": "Repositories",
+            "fr": "Dépôts",
+            "de": "Repositories",
+            "es": "Repositorios"
+          }
+        },
+        {
+          "key": "overdue_repositories",
+          "type": "number",
+          "label": {
+            "en": "Overdue backups",
+            "fr": "Sauvegardes en retard",
+            "de": "Überfällige Sicherungen",
+            "es": "Copias atrasadas"
+          }
+        },
+        {
+          "key": "overdue_names",
+          "type": "string",
+          "label": {
+            "en": "Overdue repositories",
+            "fr": "Dépôts en retard",
+            "de": "Überfällige Repositories",
+            "es": "Repositorios atrasados"
+          }
+        },
+        {
+          "key": "summary",
+          "type": "string",
+          "label": {
+            "en": "Summary",
+            "fr": "Résumé",
+            "de": "Zusammenfassung",
+            "es": "Resumen"
+          }
+        }
+      ]
+    }
+  ]
+}

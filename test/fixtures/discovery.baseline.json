@@ -1,0 +1,375 @@
+{
+  "devices": {
+    "repository": {
+      "external_id": "ext:borgbase:repo:y4ab823u",
+      "should_poll": false,
+      "params": ["BORGBASE_REPOSITORY", "BORGBASE_REGION"],
+      "features": [
+        {
+          "external_id": "ext:borgbase:repo:y4ab823u:usage",
+          "category": "data",
+          "type": "size",
+          "unit": "gigabyte",
+          "min": 0,
+          "max": 1000000,
+          "read_only": true,
+          "has_feedback": false
+        },
+        {
+          "external_id": "ext:borgbase:repo:y4ab823u:quota_used",
+          "category": "level-sensor",
+          "type": "decimal",
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "read_only": true,
+          "has_feedback": false
+        },
+        {
+          "external_id": "ext:borgbase:repo:y4ab823u:hours_since_backup",
+          "category": "duration",
+          "type": "decimal",
+          "unit": "hours",
+          "min": 0,
+          "max": 87600,
+          "read_only": true,
+          "has_feedback": false
+        }
+      ]
+    },
+    "account": {
+      "external_id": "ext:borgbase:account:48213",
+      "should_poll": false,
+      "params": ["BORGBASE_PLAN"],
+      "features": [
+        {
+          "external_id": "ext:borgbase:account:48213:total_usage",
+          "category": "data",
+          "type": "size",
+          "unit": "gigabyte",
+          "min": 0,
+          "max": 1000000,
+          "read_only": true,
+          "has_feedback": false
+        },
+        {
+          "external_id": "ext:borgbase:account:48213:storage_used",
+          "category": "level-sensor",
+          "type": "decimal",
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "read_only": true,
+          "has_feedback": false
+        },
+        {
+          "external_id": "ext:borgbase:account:48213:repositories",
+          "category": "counter-sensor",
+          "type": "integer",
+          "min": 0,
+          "max": 10000,
+          "read_only": true,
+          "has_feedback": false
+        },
+        {
+          "external_id": "ext:borgbase:account:48213:overdue_repositories",
+          "category": "counter-sensor",
+          "type": "integer",
+          "min": 0,
+          "max": 10000,
+          "read_only": true,
+          "has_feedback": false
+        }
+      ]
+    }
+  },
+  "manifest": {
+    "config_schema": [
+      {
+        "key": "intro",
+        "type": "section"
+      },
+      {
+        "key": "token",
+        "type": "secret"
+      },
+      {
+        "key": "monitoring",
+        "type": "section"
+      },
+      {
+        "key": "stale_hours",
+        "type": "number"
+      },
+      {
+        "key": "poll_interval",
+        "type": "number"
+      },
+      {
+        "key": "language",
+        "type": "select"
+      }
+    ],
+    "scene_triggers": [
+      {
+        "key": "backup_received",
+        "fields": [
+          {
+            "key": "repository",
+            "options": []
+          }
+        ],
+        "variables": [
+          {
+            "key": "repository",
+            "type": "string"
+          },
+          {
+            "key": "repository_name",
+            "type": "string"
+          },
+          {
+            "key": "usage_gb",
+            "type": "number"
+          },
+          {
+            "key": "summary",
+            "type": "string"
+          },
+          {
+            "key": "last_backup",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "key": "backup_overdue",
+        "fields": [
+          {
+            "key": "repository",
+            "options": []
+          }
+        ],
+        "variables": [
+          {
+            "key": "repository",
+            "type": "string"
+          },
+          {
+            "key": "repository_name",
+            "type": "string"
+          },
+          {
+            "key": "usage_gb",
+            "type": "number"
+          },
+          {
+            "key": "summary",
+            "type": "string"
+          },
+          {
+            "key": "last_backup",
+            "type": "string"
+          },
+          {
+            "key": "hours_since_backup",
+            "type": "number"
+          },
+          {
+            "key": "threshold_hours",
+            "type": "number"
+          }
+        ]
+      },
+      {
+        "key": "backup_resumed",
+        "fields": [
+          {
+            "key": "repository",
+            "options": []
+          }
+        ],
+        "variables": [
+          {
+            "key": "repository",
+            "type": "string"
+          },
+          {
+            "key": "repository_name",
+            "type": "string"
+          },
+          {
+            "key": "usage_gb",
+            "type": "number"
+          },
+          {
+            "key": "summary",
+            "type": "string"
+          },
+          {
+            "key": "last_backup",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "key": "quota_level_reached",
+        "fields": [
+          {
+            "key": "repository",
+            "options": []
+          },
+          {
+            "key": "level",
+            "options": ["80", "90", "100"]
+          },
+          {
+            "key": "scope",
+            "options": ["repository", "account"]
+          }
+        ],
+        "variables": [
+          {
+            "key": "repository",
+            "type": "string"
+          },
+          {
+            "key": "repository_name",
+            "type": "string"
+          },
+          {
+            "key": "usage_gb",
+            "type": "number"
+          },
+          {
+            "key": "summary",
+            "type": "string"
+          },
+          {
+            "key": "level",
+            "type": "string"
+          },
+          {
+            "key": "used_percent",
+            "type": "number"
+          },
+          {
+            "key": "quota_gb",
+            "type": "number"
+          },
+          {
+            "key": "scope",
+            "type": "string"
+          }
+        ]
+      }
+    ],
+    "scene_actions": [
+      {
+        "key": "get_repository",
+        "fields": ["repository"],
+        "outputs": [
+          {
+            "key": "repository_name",
+            "type": "string"
+          },
+          {
+            "key": "status",
+            "type": "string"
+          },
+          {
+            "key": "overdue",
+            "type": "boolean"
+          },
+          {
+            "key": "usage_gb",
+            "type": "number"
+          },
+          {
+            "key": "quota_gb",
+            "type": "number"
+          },
+          {
+            "key": "used_percent",
+            "type": "number"
+          },
+          {
+            "key": "hours_since_backup",
+            "type": "number"
+          },
+          {
+            "key": "last_backup",
+            "type": "string"
+          },
+          {
+            "key": "region",
+            "type": "string"
+          },
+          {
+            "key": "summary",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "key": "get_account",
+        "fields": [],
+        "outputs": [
+          {
+            "key": "plan",
+            "type": "string"
+          },
+          {
+            "key": "usage_gb",
+            "type": "number"
+          },
+          {
+            "key": "storage_limit_gb",
+            "type": "number"
+          },
+          {
+            "key": "used_percent",
+            "type": "number"
+          },
+          {
+            "key": "repositories",
+            "type": "number"
+          },
+          {
+            "key": "overdue_repositories",
+            "type": "number"
+          },
+          {
+            "key": "overdue_names",
+            "type": "string"
+          },
+          {
+            "key": "summary",
+            "type": "string"
+          }
+        ]
+      }
+    ],
+    "widgets": [
+      {
+        "key": "overview",
+        "settings": [],
+        "options": {}
+      },
+      {
+        "key": "repositories",
+        "settings": ["order", "count"],
+        "options": {
+          "order": ["attention", "name", "usage"]
+        }
+      },
+      {
+        "key": "usage",
+        "settings": ["repository", "interval"],
+        "options": {
+          "interval": ["last-week", "last-month", "last-three-months", "last-year"]
+        }
+      }
+    ]
+  }
+}
